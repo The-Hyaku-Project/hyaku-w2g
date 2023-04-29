@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>W2G</title>
+</head>
+<body>
+  <iframe allowfullscreen mozallowfullscreen src="https://hyaku.slidemovies.org/stream/zoro-w2g.html" id="iframe" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;"></iframe>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+    var url_string = window.location.href;
+    var url = new URL(url_string);
+    var animeID = url.searchParams.get("id");
+    var id = url.searchParams.get("sessionid");
+    var season = url.searchParams.get("s");
+    var episode = url.searchParams.get("e");
+    function generateString(length) {
+        const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        let result = ' ';
+        const charactersLength = characters.length;
+        for ( let i = 0; i < length; i++ ) {
+           result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+
+        return result;
+    }
+ 
+    let socket = io();
+    var oldInfo = "";
+    socket.on('recieveSession', (data) => {
+      console.log(data);
+      var data = data.message;
+      if (data.replace(data.split("~").pop(), "") != oldInfo) {
+        season = data.split("~")[2];
+        episode = data.split("~")[3];
+        animeID = data.split("~")[1];
+        document.getElementById("iframe").src = "https://hyaku.slidemovies.org/stream/zoro-w2g.html?id=" + animeID + "&s=" + season + "&e=" + episode;
+        oldInfo = data.replace(data.split("~").pop(), "");
+      }
+      else {
+        document.getElementById('iframe').contentWindow.postMessage("seekTo::" + data.split("~")[4], "*")
+      }
+    });
+    setInterval(function() {
+      socket.emit('getSession', id);
+    }, 4000);
+  </script>
+</body>
+</html>
